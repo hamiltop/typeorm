@@ -177,16 +177,8 @@ export class EntityPersistExecutor {
             // start execute queries in a transaction
             // if transaction is already opened in this query runner then we don't touch it
             // if its not opened yet then we open it here, and once we finish - we close it
-            let isTransactionStartedByUs = false
             try {
-                // open transaction if its not opened yet
-                if (!queryRunner.isTransactionActive) {
-                    if (!this.options || this.options.transaction !== false) {
-                        // start transaction until it was not explicitly disabled
-                        isTransactionStartedByUs = true
-                        await queryRunner.startTransaction()
-                    }
-                }
+		await queryRunner.startTransaction()
 
                 // execute all persistence operations for all entities we have
                 // console.time("executing subject executors...");
@@ -197,16 +189,10 @@ export class EntityPersistExecutor {
 
                 // commit transaction if it was started by us
                 // console.time("commit");
-                if (isTransactionStartedByUs === true)
-                    await queryRunner.commitTransaction()
+	        await queryRunner.commitTransaction()
                 // console.timeEnd("commit");
             } catch (error) {
-                // rollback transaction if it was started by us
-                if (isTransactionStartedByUs) {
-                    try {
-                        await queryRunner.rollbackTransaction()
-                    } catch (rollbackError) {}
-                }
+		await queryRunner.rollbackTransaction()
                 throw error
             }
         } finally {
